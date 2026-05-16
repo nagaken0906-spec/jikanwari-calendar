@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="時間割メモ" />
+<title>時間割カレンダー登録</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F0EB;
+    --surface: #FAFAF8;
+    --surface2: #EEECEA;
+    --ink: #1A1A18;
+    --ink2: #6B6A66;
+    --ink3: #9E9D99;
+    --accent: #2D5BE3;
+    --accent-bg: #EBF0FD;
+    --accent-light: #C5D4F9;
+    --success: #1A7A4A;
+    --success-bg: #E6F5ED;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.15);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --font: 'Noto Sans JP', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 0 0 calc(40px + var(--safe-bottom));
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    padding: 52px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-badge {
+    font-size: 11px; font-weight: 500;
+    background: var(--accent-bg); color: var(--accent);
+    padding: 4px 10px; border-radius: 20px;
+    font-family: var(--mono);
+  }
+
+  /* Main */
+  .main { padding: 20px 16px; }
+
+  /* Date */
+  .date-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .date-card-label { font-size: 13px; color: var(--ink3); font-weight: 500; }
+  .date-card input[type="date"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    -webkit-appearance: none;
+  }
+
+  /* Section label */
+  .sec-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 10px;
+  }
+
+  /* Slot list */
+  .slot-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+
+  .slot-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-strong);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    box-shadow: var(--shadow);
+    transition: border-left-color 0.15s;
+  }
+  .slot-row.filled { border-left-color: var(--accent); }
+
+  .slot-meta { flex-shrink: 0; width: 62px; }
+  .slot-meta-name { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .slot-meta-time { font-size: 10px; font-family: var(--mono); color: var(--ink3); }
+
+  .slot-divider { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
+
+  .slot-inputs { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .slot-title-input {
+    background: transparent; border: none; outline: none;
+    font-family: var(--font); font-size: 14px; font-weight: 500;
+    color: var(--ink); width: 100%;
+  }
+  .slot-title-input::placeholder { color: var(--ink3); font-weight: 400; }
+  .slot-note-input {
+    background: transparent; border: none; outline: none;
+    font-family: var(--font); font-size: 12px;
+    color: var(--ink2); width: 100%;
+  }
+  .slot-note-input::placeholder { color: var(--ink3); }
+
+  /* Counter */
+  .counter {
+    font-size: 12px; color: var(--ink3);
+    text-align: right; margin-bottom: 14px;
+  }
+  .counter strong { color: var(--accent); font-weight: 700; }
+
+  /* Button */
+  .btn-main {
+    width: 100%; padding: 15px;
+    background: var(--accent); color: #fff;
+    font-family: var(--font); font-size: 15px; font-weight: 700;
+    border: none; border-radius: var(--radius);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(45,91,227,0.3);
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn-main:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(45,91,227,0.2); }
+
+  /* Preview */
+  .preview {
+    display: none;
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .preview.show { display: block; }
+
+  .preview-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .preview-header-title {
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .preview-count {
+    font-size: 12px; font-family: var(--mono);
+    background: var(--accent-bg); color: var(--accent);
+    padding: 2px 8px; border-radius: 10px; font-weight: 500;
+  }
+
+  .event-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+
+  .event-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    transition: opacity 0.2s;
+  }
+  .event-item.done { opacity: 0.4; }
+  .event-item.done .event-check { color: var(--success); }
+
+  .event-slot-badge {
+    font-size: 10px; font-weight: 700;
+    background: var(--accent-bg); color: var(--accent);
+    padding: 2px 6px; border-radius: 4px;
+    flex-shrink: 0; min-width: 52px; text-align: center;
+  }
+  .event-item.done .event-slot-badge {
+    background: var(--success-bg); color: var(--success);
+  }
+  .event-name {
+    flex: 1; font-size: 13px; font-weight: 500; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .event-time { font-size: 10px; font-family: var(--mono); color: var(--ink3); flex-shrink: 0; }
+  .event-check { font-size: 14px; color: var(--ink3); flex-shrink: 0; transition: color 0.2s; }
+
+  .preview-footer { padding: 12px 14px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+
+  .btn-next {
+    width: 100%; padding: 14px;
+    background: var(--success-bg); color: var(--success);
+    font-family: var(--font); font-size: 14px; font-weight: 700;
+    border: 1.5px solid rgba(26,122,74,0.2); border-radius: var(--radius);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.15s;
+  }
+  .btn-next:active { transform: scale(0.98); }
+  .btn-next:disabled { opacity: 0.45; cursor: default; transform: none; }
+
+  .progress-bar-wrap {
+    height: 4px; background: var(--border);
+    border-radius: 2px; overflow: hidden; margin-bottom: 2px;
+  }
+  .progress-bar {
+    height: 100%; background: var(--success);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .progress-label {
+    font-size: 11px; color: var(--ink3);
+    text-align: center; font-family: var(--mono);
+  }
+
+  .btn-reset {
+    width: 100%; padding: 11px;
+    background: transparent; color: var(--ink3);
+    font-family: var(--font); font-size: 13px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    cursor: pointer; transition: background 0.12s;
+  }
+  .btn-reset:active { background: var(--surface2); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 60px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--ink); color: #fff;
+    font-size: 13px; font-weight: 500;
+    padding: 9px 18px; border-radius: 30px;
+    opacity: 0; transition: all 0.22s;
+    pointer-events: none; white-space: nowrap; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* All done banner */
+  .done-banner {
+    display: none;
+    background: var(--success-bg);
+    border: 1.5px solid rgba(26,122,74,0.2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    text-align: center;
+    color: var(--success);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .done-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-title">📅 時間割メモ</div>
+      <div class="header-badge">Google カレンダー</div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- 日付 -->
+    <div class="date-card">
+      <div class="date-card-label">日付</div>
+      <input type="date" id="eDate" />
+    </div>
+
+    <!-- 時間割入力 -->
+    <div class="sec-label">時間割を入力（空欄はスキップ）</div>
+    <div class="slot-list" id="slotList"></div>
+    <div class="counter">入力済み：<strong id="countNum">0</strong> 件</div>
+
+    <!-- 追加ボタン -->
+    <button class="btn-main" onclick="buildAll()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+        <line x1="12" y1="15" x2="12" y2="19"/><line x1="10" y1="17" x2="14" y2="17"/>
+      </svg>
+      まとめてカレンダーに追加する
+    </button>
+
+    <!-- プレビュー -->
+    <div class="preview" id="preview">
+      <div class="preview-header">
+        <div class="preview-header-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          登録する予定
+        </div>
+        <div class="preview-count" id="previewCount">0件</div>
+      </div>
+
+      <div class="event-list" id="eventList"></div>
+
+      <div class="preview-footer">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">0 / 0 件登録済み</div>
+
+        <button class="btn-next" id="btnNext" onclick="openNext()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          <span id="btnNextLabel">1件目をGoogleカレンダーで開く</span>
+        </button>
+
+        <div class="done-banner" id="doneBanner">
+          🎉 すべての予定を登録しました！
+        </div>
+
+        <button class="btn-reset" onclick="resetAll()">
+          ↺ リセットして新しい日を入力する
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SLOTS = [
+  { name: '朝',  start: '08:20', end: '08:35' },
+  { name: '①', start: '08:40', end: '09:25' },
+  { name: '②', start: '09:35', end: '10:20' },
+  { name: '③', start: '10:40', end: '11:25' },
+  { name: '④', start: '11:35', end: '12:20' },
+  { name: '⑤', start: '13:40', end: '14:25' },
+  { name: '⑥', start: '14:30', end: '15:15' },
+  { name: '放課後',  start: '15:25', end: '16:00' },
+  { name: '会議',    start: '16:10', end: '17:00' },
+];
+
+let urls = [], idx = 0;
+
+(function init() {
+  const t = new Date();
+  document.getElementById('eDate').value =
+    `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+
+  const list = document.getElementById('slotList');
+  SLOTS.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'slot-row';
+    row.id = 'row' + i;
+    row.innerHTML = `
+      <div class="slot-meta">
+        <div class="slot-meta-name">${s.name}</div>
+        <div class="slot-meta-time">${s.start}〜${s.end}</div>
+      </div>
+      <div class="slot-divider"></div>
+      <div class="slot-inputs">
+        <input class="slot-title-input" id="inp${i}" type="text" placeholder="科目・内容を入力" oninput="onInput(${i})" />
+        <input class="slot-note-input" id="note${i}" type="text" placeholder="メモ（任意）" />
+      </div>
+    `;
+    list.appendChild(row);
+  });
+})();
+
+function onInput(i) {
+  const v = document.getElementById('inp' + i).value.trim();
+  document.getElementById('row' + i).classList.toggle('filled', v.length > 0);
+  const count = SLOTS.filter((_, j) => document.getElementById('inp' + j).value.trim()).length;
+  document.getElementById('countNum').textContent = count;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function buildAll() {
+  const dateVal = document.getElementById('eDate').value;
+  if (!dateVal) { toast('日付を選んでください'); return; }
+
+  const ds = dateVal.replace(/-/g, '');
+  const items = [];
+
+  SLOTS.forEach((s, i) => {
+    const title = document.getElementById('inp' + i).value.trim();
+    if (!title) return;
+    const note = document.getElementById('note' + i).value.trim();
+    const fullTitle = `【${s.name}】${title}`;
+    const sT = s.start.replace(':', '');
+    const eT = s.end.replace(':', '');
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: fullTitle,
+      dates: `${ds}T${sT}00/${ds}T${eT}00`,
+      details: note
+    });
+    items.push({
+      slot: s.name,
+      title: title,
+      time: `${s.start}〜${s.end}`,
+      url: 'https://calendar.google.com/calendar/render?' + params.toString()
+    });
+  });
+
+  if (items.length === 0) { toast('科目を1つ以上入力してください'); return; }
+
+  urls = items.map(it => it.url);
+  idx = 0;
+
+  const evList = document.getElementById('eventList');
+  evList.innerHTML = '';
+  items.forEach((it, i) => {
+    const el = document.createElement('div');
+    el.className = 'event-item';
+    el.id = 'evItem' + i;
+    el.innerHTML = `
+      <div class="event-slot-badge">${it.slot}</div>
+      <div class="event-name">${it.title}</div>
+      <div class="event-time">${it.time}</div>
+      <div class="event-check">○</div>
+    `;
+    evList.appendChild(el);
+  });
+
+  document.getElementById('previewCount').textContent = items.length + '件';
+  document.getElementById('doneBanner').classList.remove('show');
+  document.getElementById('btnNext').disabled = false;
+  updateProgress();
+
+  const preview = document.getElementById('preview');
+  preview.classList.add('show');
+  preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateProgress() {
+  const total = urls.length;
+  const done = idx;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${total} 件登録済み`;
+
+  if (done >= total) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNextLabel').textContent = 'すべて開き終わりました';
+    document.getElementById('doneBanner').classList.add('show');
+  } else {
+    document.getElementById('btnNextLabel').textContent =
+      `${done + 1}件目をGoogleカレンダーで開く（残り${total - done}件）`;
+  }
+}
+
+function openNext() {
+  if (idx < urls.length) {
+    window.open(urls[idx], '_blank');
+    const itemEl = document.getElementById('evItem' + idx);
+    if (itemEl) {
+      itemEl.classList.add('done');
+      itemEl.querySelector('.event-check').textContent = '✓';
+    }
+    idx++;
+    updateProgress();
+  }
+}
+
+function resetAll() {
+  SLOTS.forEach((_, i) => {
+    document.getElementById('inp' + i).value = '';
+    document.getElementById('note' + i).value = '';
+    document.getElementById('row' + i).classList.remove('filled');
+  });
+  document.getElementById('countNum').textContent = '0';
+  document.getElementById('preview').classList.remove('show');
+  urls = []; idx = 0;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
